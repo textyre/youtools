@@ -1,0 +1,11 @@
+node_modules
+dist
+env
+*.env
+/.idea
+/.vscode
+*.log
+/.husky/_
+*.local
+youtools-credentials.json
+/.DS_Store
