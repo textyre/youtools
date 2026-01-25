@@ -1,67 +1,6 @@
-import path from 'path'
-import fs from 'fs'
-import os from 'os'
 import { google } from 'googleapis'
-import open from 'open'
-import http from 'http'
 import { renderTable } from './ui'
-
-const CREDENTIALS_PATH = path.join(os.homedir(), '.config', 'youtools', 'credentials.json')
-
-async function ensureAuthClient() {
-  // load client id/secret from environment variables for simplicity
-  const clientId = process.env.YT_OAUTH_CLIENT_ID
-  const clientSecret = process.env.YT_OAUTH_CLIENT_SECRET
-  const redirectPort = 54321
-  if (!clientId || !clientSecret) {
-    throw new Error('Set YT_OAUTH_CLIENT_ID and YT_OAUTH_CLIENT_SECRET in env')
-  }
-  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, `http://localhost:${redirectPort}/oauth2callback`)
-
-  // try load saved token
-  try {
-    const raw = fs.readFileSync(CREDENTIALS_PATH, 'utf8')
-    const token = JSON.parse(raw)
-    oauth2Client.setCredentials(token)
-    return oauth2Client
-  } catch (err) {
-    // start flow
-  }
-
-  const scopes = ['https://www.googleapis.com/auth/youtube.readonly']
-  const authUrl = oauth2Client.generateAuthUrl({ access_type: 'offline', scope: scopes })
-  await open(authUrl)
-
-  const code = await new Promise<string>((resolve, reject) => {
-    const srv = http.createServer((req, res) => {
-      if (!req.url) return
-      const u = new URL(req.url, `http://localhost:${redirectPort}`)
-      const c = u.searchParams.get('code')
-      res.writeHead(200, { 'Content-Type': 'text/plain' })
-      res.end('You can close this window and return to the CLI')
-      if (c) {
-        resolve(c)
-        srv.close()
-      } else {
-        reject(new Error('No code received'))
-      }
-    })
-    srv.listen(54321)
-  })
-
-  const { tokens } = await oauth2Client.getToken(code)
-  oauth2Client.setCredentials(tokens)
-
-  // save token
-  try {
-    fs.mkdirSync(path.dirname(CREDENTIALS_PATH), { recursive: true })
-    fs.writeFileSync(CREDENTIALS_PATH, JSON.stringify(tokens), { mode: 0o600 })
-  } catch (err) {
-    // ignore
-  }
-
-  return oauth2Client
-}
+import { ensureAuthClient as ensureOauthClient } from '../../lib/googleAuth'
 
 async function fetchCommentThreads(youtube: any, videoId: string, limit: number) {
   const results: any[] = []
@@ -101,18 +40,27 @@ function scoreComment(item: any, channelId: string | null, authorBonus = 1000) {
 }
 
 export async function runPopularComments(cfg: any) {
-  const auth = await ensureAuthClient()
-  const youtube = google.youtube({ version: 'v3', auth })
+  const apiKey = process.env.YT_API_KEY
+  let youtube: any
+  let myChannelId: string | null = null
 
-  // get own channel id for author detection
-  const meRes = await youtube.channels.list({ part: ['snippet'], mine: true })
-  const myChannelId = meRes.data.items && meRes.data.items[0] && meRes.data.items[0].id
+  // create youtube client depending on auth method
+  if (apiKey) {
+    youtube = google.youtube({ version: 'v3', auth: apiKey })
+  } else {
+    const auth = await ensureOauthClient()
+    youtube = google.youtube({ version: 'v3', auth })
+  }
+
+  // Always fetch the video's snippet to determine the video's owner channel id.
+  const vidRes = await youtube.videos.list({ part: ['snippet'], id: cfg.videoId })
+  const videoOwnerChannelId = vidRes.data.items && vidRes.data.items[0] && vidRes.data.items[0].snippet && vidRes.data.items[0].snippet.channelId
 
   const threads = await fetchCommentThreads(youtube, cfg.videoId, cfg.limit)
 
   const scored = threads.map((it: any) => ({
     id: it.id,
-    ...scoreComment(it, myChannelId || null, cfg.authorBonus),
+    ...scoreComment(it, videoOwnerChannelId || null, cfg.authorBonus),
   }))
 
   // sort
@@ -122,9 +70,10 @@ export async function runPopularComments(cfg: any) {
     if (mode === 'likes') return (a.likes - b.likes) * order
     if (mode === 'time') return (new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()) * order
     if (mode === 'replies') return (a.replies - b.replies) * order
+    if (mode === 'length') return (a.text.length - b.text.length) * order
     // likes_plus_author
     return (a.score - b.score) * order
   })
 
-  renderTable(scored, { ascii: cfg.ascii, wide: cfg.wide })
+  await renderTable(scored, { ascii: cfg.ascii, wide: cfg.wide, expand: cfg.wide })
 }
