@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config'
 import { Command } from 'commander'
 import { popularCommentsCommand } from './modules/popular-comments'
 import { popularVideosCommand } from './modules/popular-videos'
