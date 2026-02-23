@@ -31,7 +31,7 @@
     "cli-table3": "^0.6.2",
     "prompts": "^2.4.2",
     "commander": "^10.0.0",
-    "googleapis": "^119.0.0",
+    "googleapis": "^171.0.0",
     "open": "^9.0.0"
   },
   "devDependencies": {
