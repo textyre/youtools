@@ -21,7 +21,7 @@ export async function ensureAuthClient() {
     const token = JSON.parse(raw)
     oauth2Client.setCredentials(token)
     return oauth2Client
-  } catch (err) {
+  } catch {
     // continue to auth
   }
 
@@ -52,7 +52,7 @@ export async function ensureAuthClient() {
   try {
     fs.mkdirSync(path.dirname(CREDENTIALS_PATH), { recursive: true })
     fs.writeFileSync(CREDENTIALS_PATH, JSON.stringify(tokens), { mode: 0o600 })
-  } catch (err) {
+  } catch {
     // ignore
   }
 

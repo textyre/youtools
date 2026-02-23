@@ -1,6 +1,18 @@
 import { Command } from 'commander'
 import { runPopularComments } from './service'
 
+interface PopularCommentsOpts {
+  limit: string
+  sort: string
+  order: string
+  ascii: boolean
+  wide: boolean
+  expand: boolean
+  pager: boolean
+  scanReplies: boolean
+  authorBonus: string
+}
+
 export const popularCommentsCommand = new Command('popular-comments')
   .description('Fetch popular comments for a video or channel')
   .command('video')
@@ -15,7 +27,7 @@ export const popularCommentsCommand = new Command('popular-comments')
   .option('--pager', 'open selected comment in pager (less/more) when expanding interactively', false)
   .option('--scan-replies', 'fetch all replies to detect author replies (uses extra API requests)', true)
   .option('--author-bonus <n>', 'bonus for author replied', '1000')
-  .action(async (videoId: string, opts: any) => {
+  .action(async (videoId: string, opts: PopularCommentsOpts) => {
     const cfg = {
       videoId,
       limit: Number(opts.limit),

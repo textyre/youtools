@@ -3,6 +3,17 @@ import chalk from 'chalk'
 import prompts from 'prompts'
 import { spawnSync } from 'child_process'
 
+export interface CommentItem {
+  id?: string | null
+  author?: string | null
+  text?: string | null
+  likes: number
+  replies: number
+  authorReplied: boolean
+  score: number
+  publishedAt?: string | null
+}
+
 function wrapText(text: string, width: number) {
   if (!text) return ''
   const words = text.split(/(\s+)/)
@@ -49,10 +60,10 @@ function normalizeHtmlText(s: string) {
   return t
 }
 
-export async function renderTable(items: any[], opts: { ascii?: boolean; wide?: boolean; expand?: boolean } = {}) {
+export async function renderTable(items: CommentItem[], opts: { ascii?: boolean; wide?: boolean; expand?: boolean; pager?: boolean } = {}) {
   const termWidth = (process && process.stdout && process.stdout.columns) ? process.stdout.columns : 120
   const otherCols = 4 + 20 + 8 + 8 + 24 + 6 // estimation including paddings
-  let commentColWidth = opts.wide ? Math.max(60, termWidth - otherCols) : Math.max(40, Math.min(120, termWidth - otherCols))
+  const commentColWidth = opts.wide ? Math.max(60, termWidth - otherCols) : Math.max(40, Math.min(120, termWidth - otherCols))
 
   // If wide is set, print full expanded blocks instead of a table so comments are fully visible.
   if (opts.wide) {

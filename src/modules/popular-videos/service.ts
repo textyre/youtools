@@ -73,7 +73,7 @@ async function fetchVideoStats(youtube: youtube_v3.Youtube, videoIds: string[]):
     for (const item of (res.data.items ?? [])) {
       if (!item.id) continue
       records.push({
-        id: item.id ?? "",
+        id: item.id,
         title: item.snippet?.title ?? '',
         publishedAt: item.snippet?.publishedAt ?? '',
         description: (item.snippet?.description ?? '').slice(0, 200),
