@@ -24,6 +24,7 @@ export const popularVideosCommand = new Command('popular-videos')
   .option('--no-cache', 'bypass cache and force fresh fetch')
   .option('--ascii', 'force ASCII table', false)
   .option('--wide', 'show description column', false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   .action(async (channel: string, opts: any) => {
     const cfg = {
       channel,

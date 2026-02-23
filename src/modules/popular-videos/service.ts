@@ -46,7 +46,8 @@ async function fetchVideoIds(youtube: any, uploadsPlaylistId: string, maxScan: n
   const ids: string[] = []
   let nextPageToken: string | undefined
 
-  while (true) {
+  let hasMore = true
+  while (hasMore) {
     const res = await youtube.playlistItems.list({
       part: ['contentDetails'],
       playlistId: uploadsPlaylistId,
@@ -58,8 +59,7 @@ async function fetchVideoIds(youtube: any, uploadsPlaylistId: string, maxScan: n
       if (videoId) ids.push(videoId)
     }
     nextPageToken = res.data.nextPageToken
-    if (!nextPageToken) break
-    if (maxScan > 0 && ids.length >= maxScan) break
+    hasMore = Boolean(nextPageToken) && !(maxScan > 0 && ids.length >= maxScan)
   }
 
   return maxScan > 0 ? ids.slice(0, maxScan) : ids
