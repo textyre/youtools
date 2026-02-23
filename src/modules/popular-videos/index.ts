@@ -4,13 +4,25 @@ import { SortKey, SortOrder } from './types'
 
 function parseSortKeys(value: string): SortKey[] {
   const allowed: SortKey[] = ['views', 'likes', 'comments']
-  return value.split(',').map((k) => {
-    const key = k.trim() as SortKey
-    if (!allowed.includes(key)) {
-      throw new Error(`Invalid sort key "${key}". Allowed: ${allowed.join(', ')}`)
+  const keys = value.split(',').map((k) => k.trim()).filter(Boolean)
+  if (keys.length === 0) throw new Error('--sort must not be empty')
+  return keys.map((k) => {
+    if (!allowed.includes(k as SortKey)) {
+      throw new Error(`Invalid sort key "${k}". Allowed: ${allowed.join(', ')}`)
     }
-    return key
+    return k as SortKey
   })
+}
+
+interface PopularVideosOpts {
+  limit: string
+  sort: string
+  order: string
+  maxScan: string
+  cacheTtl: string
+  cache: boolean
+  ascii: boolean
+  wide: boolean
 }
 
 export const popularVideosCommand = new Command('popular-videos')
@@ -24,13 +36,17 @@ export const popularVideosCommand = new Command('popular-videos')
   .option('--no-cache', 'bypass cache and force fresh fetch')
   .option('--ascii', 'force ASCII table', false)
   .option('--wide', 'show description column', false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  .action(async (channel: string, opts: any) => {
+  .action(async (channel: string, opts: PopularVideosOpts) => {
     const cfg = {
       channel,
       limit: Number(opts.limit),
       sort: parseSortKeys(opts.sort),
-      order: opts.order as SortOrder,
+      order: (() => {
+        if (opts.order !== 'asc' && opts.order !== 'desc') {
+          throw new Error(`Invalid order "${opts.order as string}". Allowed: asc, desc`)
+        }
+        return opts.order as SortOrder
+      })(),
       maxScan: Number(opts.maxScan),
       cacheTtl: Number(opts.cacheTtl),
       noCache: !opts.cache,

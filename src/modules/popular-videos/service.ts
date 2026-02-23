@@ -1,4 +1,4 @@
-import { google } from 'googleapis'
+import { google, youtube_v3 } from 'googleapis'
 import { ensureAuthClient } from '../../lib/googleAuth'
 import { VideoRecord, SortKey, SortOrder } from './types'
 import { parseChannelInput } from './channel'
@@ -18,15 +18,14 @@ export interface PopularVideosCfg {
   wide: boolean
 }
 
-async function buildYouTubeClient() {
+async function buildYouTubeClient(): Promise<youtube_v3.Youtube> {
   const apiKey = process.env.YT_API_KEY
   if (apiKey) return google.youtube({ version: 'v3', auth: apiKey })
   const auth = await ensureAuthClient()
   return google.youtube({ version: 'v3', auth })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function resolveChannelId(youtube: any, raw: string): Promise<string> {
+async function resolveChannelId(youtube: youtube_v3.Youtube, raw: string): Promise<string> {
   const input = parseChannelInput(raw)
   if (input.type === 'id') return input.value
 
@@ -41,13 +40,11 @@ async function resolveChannelId(youtube: any, raw: string): Promise<string> {
   return id
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchVideoIds(youtube: any, uploadsPlaylistId: string, maxScan: number): Promise<string[]> {
+async function fetchVideoIds(youtube: youtube_v3.Youtube, uploadsPlaylistId: string, maxScan: number): Promise<string[]> {
   const ids: string[] = []
   let nextPageToken: string | undefined
 
-  let hasMore = true
-  while (hasMore) {
+  do {
     const res = await youtube.playlistItems.list({
       part: ['contentDetails'],
       playlistId: uploadsPlaylistId,
@@ -58,15 +55,14 @@ async function fetchVideoIds(youtube: any, uploadsPlaylistId: string, maxScan: n
       const videoId = item.contentDetails?.videoId
       if (videoId) ids.push(videoId)
     }
-    nextPageToken = res.data.nextPageToken
-    hasMore = Boolean(nextPageToken) && !(maxScan > 0 && ids.length >= maxScan)
-  }
+    nextPageToken = res.data.nextPageToken ?? undefined
+    if (maxScan > 0 && ids.length >= maxScan) break
+  } while (nextPageToken)
 
   return maxScan > 0 ? ids.slice(0, maxScan) : ids
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchVideoStats(youtube: any, videoIds: string[]): Promise<VideoRecord[]> {
+async function fetchVideoStats(youtube: youtube_v3.Youtube, videoIds: string[]): Promise<VideoRecord[]> {
   const records: VideoRecord[] = []
   for (let i = 0; i < videoIds.length; i += 50) {
     const batch = videoIds.slice(i, i + 50)
@@ -75,8 +71,9 @@ async function fetchVideoStats(youtube: any, videoIds: string[]): Promise<VideoR
       id: batch,
     })
     for (const item of (res.data.items ?? [])) {
+      if (!item.id) continue
       records.push({
-        id: item.id,
+        id: item.id ?? "",
         title: item.snippet?.title ?? '',
         publishedAt: item.snippet?.publishedAt ?? '',
         description: (item.snippet?.description ?? '').slice(0, 200),
@@ -110,9 +107,7 @@ export async function runPopularVideos(cfg: PopularVideosCfg): Promise<void> {
   })
   const uploadsId = chanRes.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
   if (!uploadsId) {
-    // eslint-disable-next-line no-console
-    console.error('Could not find uploads playlist for channel.')
-    process.exit(1)
+    throw new Error('Could not find uploads playlist for channel.')
   }
 
   // Fetch all video IDs
