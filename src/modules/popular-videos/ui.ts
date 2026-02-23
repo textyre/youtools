@@ -21,8 +21,12 @@ export async function renderTable(
     return
   }
 
-  const head = ['#', 'Title', 'Views', 'Likes', 'Comments', 'Published', 'ID']
-  const colWidths = [4, 45, 9, 9, 10, 12, 13]
+  const termWidth = process.stdout.columns || 120
+  // Fixed columns: # (4) + Views (9) + Likes (9) + Comments (10) + Published (12) + borders (~18)
+  const titleColWidth = Math.max(40, termWidth - 62)
+
+  const head = ['#', 'Title / Link', 'Views', 'Likes', 'Comments', 'Published']
+  const colWidths = [4, titleColWidth, 9, 9, 10, 12]
 
   if (opts.wide) {
     head.push('Description')
@@ -45,14 +49,14 @@ export async function renderTable(
   })
 
   videos.forEach((v, i) => {
+    const titleWithLink = `${v.title}\nhttps://youtu.be/${v.id}`
     const row: (string | number)[] = [
       i + 1,
-      v.title.slice(0, 43),
+      titleWithLink,
       fmtNum(v.viewCount),
       fmtNum(v.likeCount),
       fmtNum(v.commentCount),
       fmtDate(v.publishedAt),
-      v.id,
     ]
     if (opts.wide) row.push(v.description.replace(/\n/g, ' ').slice(0, 58))
     table.push(row)
