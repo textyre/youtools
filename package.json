@@ -5,7 +5,8 @@
   "description": "CLI tools for YouTube - popular-comments module",
   "main": "dist/cli.js",
   "bin": {
-    "youtools": "dist/cli.js"
+    "youtools": "dist/cli.js",
+    "youtools-mcp": "dist/mcp.js"
   },
   "scripts": {
     "build": "tsc -p .",
@@ -13,7 +14,9 @@
     "start": "node dist/cli.js",
     "lint": "eslint --ext .ts src",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest"
+    "test": "jest",
+    "mcp": "node dist/mcp.js",
+    "dev:mcp": "ts-node src/mcp.ts"
   },
   "keywords": [
     "youtube",
@@ -26,6 +29,7 @@
     "node": ">=14"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "@types/node": "^20.0.0",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.2",
@@ -33,7 +37,8 @@
     "dotenv": "^17.3.1",
     "googleapis": "^171.0.0",
     "open": "^9.0.0",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/jest": "^29.2.0",
