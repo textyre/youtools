@@ -162,11 +162,15 @@ server.registerTool(
   'summarize_video',
   {
     description:
-      'Get video subtitles with a summarization prompt. The LLM agent uses the returned prompt to generate the summary.',
+      'Get video subtitles with a summarization prompt. The LLM agent uses the returned prompt to generate the summary. ' +
+      'Format: "brief", "detailed", "checklist", combine with "+" (e.g. "brief+checklist"), or "custom:your prompt".',
     inputSchema: {
       videoId: z.string(),
       lang: z.string().optional(),
-      format: z.string().optional(),
+      format: z
+        .string()
+        .optional()
+        .describe('Summary style: brief, detailed, checklist, brief+checklist, or custom:...'),
     },
   },
   async ({ videoId, lang, format }) => {
@@ -184,13 +188,19 @@ server.registerTool(
     }
     const content = await fetchSubtitles(cfg)
 
-    // Determine prompt based on format
+    // Determine prompt based on format (supports combining: "brief+checklist")
     const style = format ?? 'brief'
     let prompt: string
     if (style.startsWith('custom:')) {
       prompt = style.slice('custom:'.length)
     } else {
-      prompt = SUMMARY_PROMPTS[style] ?? SUMMARY_PROMPTS.brief
+      const parts = style.split('+').map((s) => s.trim()).filter(Boolean)
+      const prompts = parts
+        .map((p) => SUMMARY_PROMPTS[p])
+        .filter((p): p is string => !!p)
+      prompt = prompts.length > 0
+        ? prompts.join('\n\nAdditionally:\n\n')
+        : SUMMARY_PROMPTS.brief
     }
 
     return {
