@@ -2,7 +2,6 @@ import {
   validateVideoId,
   buildSubArgs,
   parseListSubsOutput,
-  SubtitleTrack,
   DownloadSubOpts,
 } from './ytdlp'
 

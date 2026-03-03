@@ -7,9 +7,6 @@ import {
   DEFAULTS,
   loadConfig,
   _resetConfig,
-  AppConfig,
-  SubtitlesConfig,
-  CacheConfig,
 } from './config'
 
 describe('resolveHome', () => {
