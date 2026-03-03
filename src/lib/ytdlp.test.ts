@@ -86,7 +86,7 @@ describe('buildSubArgs', () => {
     const args = buildSubArgs('dQw4w9WgXcQ', baseOpts)
     const oIdx = args.indexOf('-o')
     expect(oIdx).toBeGreaterThanOrEqual(0)
-    expect(args[oIdx + 1]).toBe('/tmp/subs/%(id)s.%(sub_lang)s.%(ext)s')
+    expect(args[oIdx + 1]).toBe('subtitle:/tmp/subs/%(id)s.%(ext)s')
   })
 
   it('appends the video URL at the end', () => {
