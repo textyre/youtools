@@ -65,6 +65,26 @@ export function parseSrt(content: string): TimestampedEntry[] {
 }
 
 /**
+ * Converts parsed SRT entries into deduplicated plain text.
+ * Auto-generated subtitles often overlap — this removes duplicate lines
+ * and strips timestamps to produce a compact transcript.
+ */
+export function srtToPlainText(entries: TimestampedEntry[]): string {
+  const seen = new Set<string>()
+  const lines: string[] = []
+
+  for (const entry of entries) {
+    const text = entry.text.trim()
+    if (text && !seen.has(text)) {
+      seen.add(text)
+      lines.push(text)
+    }
+  }
+
+  return lines.join('\n')
+}
+
+/**
  * Searches subtitle entries for a query string (case-insensitive).
  * Returns all entries whose text contains the query.
  */

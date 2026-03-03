@@ -1,4 +1,4 @@
-import { parseSrt, searchInSubtitles, TimestampedEntry } from './service'
+import { parseSrt, srtToPlainText, searchInSubtitles, TimestampedEntry } from './service'
 
 const SAMPLE_SRT = [
   '1',
@@ -64,6 +64,38 @@ describe('parseSrt', () => {
       timestamp: '00:00:05',
       text: 'Valid block here.',
     })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// srtToPlainText
+// ---------------------------------------------------------------------------
+
+describe('srtToPlainText', () => {
+  it('converts entries to deduplicated plain text', () => {
+    const entries: TimestampedEntry[] = [
+      { timestamp: '00:00:01', text: 'Hello world' },
+      { timestamp: '00:00:03', text: 'Hello world' },
+      { timestamp: '00:00:05', text: 'Something new' },
+      { timestamp: '00:00:07', text: 'Hello world' },
+    ]
+    const result = srtToPlainText(entries)
+    expect(result).toBe('Hello world\nSomething new')
+  })
+
+  it('skips empty text entries', () => {
+    const entries: TimestampedEntry[] = [
+      { timestamp: '00:00:01', text: 'First line' },
+      { timestamp: '00:00:03', text: '' },
+      { timestamp: '00:00:05', text: '   ' },
+      { timestamp: '00:00:07', text: 'Second line' },
+    ]
+    const result = srtToPlainText(entries)
+    expect(result).toBe('First line\nSecond line')
+  })
+
+  it('returns empty string for empty array', () => {
+    expect(srtToPlainText([])).toBe('')
   })
 })
 
