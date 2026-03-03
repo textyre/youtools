@@ -60,7 +60,8 @@ server.registerTool(
     },
   },
   async ({ videoId }) => {
-    const tracks = await listLanguages(videoId)
+    const config = loadConfig()
+    const tracks = await listLanguages(videoId, config.subtitles.poToken || undefined)
     return {
       content: [{ type: 'text' as const, text: JSON.stringify(tracks, null, 2) }],
     }
@@ -90,6 +91,7 @@ server.registerTool(
       stdout: false,
       list: false,
       search: null,
+      poToken: config.subtitles.poToken,
     }
     const text = await fetchSubtitles(cfg)
     return {
@@ -121,6 +123,7 @@ server.registerTool(
       stdout: false,
       list: false,
       search: null,
+      poToken: config.subtitles.poToken,
     }
     const srtContent = await fetchSubtitles(cfg)
     const entries = parseSrt(srtContent)
@@ -144,7 +147,8 @@ server.registerTool(
     },
   },
   async ({ videoId }) => {
-    const info = await fetchVideoInfo(videoId)
+    const config = loadConfig()
+    const info = await fetchVideoInfo(videoId, config.subtitles.poToken || undefined)
     return {
       content: [
         { type: 'text' as const, text: JSON.stringify(info, null, 2) },
@@ -176,6 +180,7 @@ server.registerTool(
       stdout: false,
       list: false,
       search: null,
+      poToken: config.subtitles.poToken,
     }
     const content = await fetchSubtitles(cfg)
 

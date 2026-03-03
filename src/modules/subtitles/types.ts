@@ -11,6 +11,7 @@ export interface SubtitlesCfg {
   stdout: boolean
   list: boolean
   search: string | null
+  poToken: string
 }
 
 export interface SearchMatch {

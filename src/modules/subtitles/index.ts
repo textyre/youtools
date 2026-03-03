@@ -14,6 +14,7 @@ interface SubtitlesOpts {
   output?: string
   stdout: boolean
   ascii: boolean
+  poToken?: string
 }
 
 export const subtitlesCommand = new Command('subtitles')
@@ -27,12 +28,15 @@ export const subtitlesCommand = new Command('subtitles')
   .option('-o, --output <path>', 'output directory path')
   .option('--stdout', 'print subtitles to stdout instead of saving', false)
   .option('--ascii', 'force ASCII table', false)
+  .option('--po-token <token>', 'YouTube PO token for subtitle access')
   .action(async (videoId: string, opts: SubtitlesOpts) => {
     const config = loadConfig()
 
+    const poToken = opts.poToken ?? config.subtitles.poToken
+
     // --list mode
     if (opts.list) {
-      const tracks = await listLanguages(videoId)
+      const tracks = await listLanguages(videoId, poToken || undefined)
       renderLanguagesTable(tracks, opts.ascii)
       return
     }
@@ -51,6 +55,7 @@ export const subtitlesCommand = new Command('subtitles')
       stdout: opts.stdout,
       list: false,
       search: opts.search ?? null,
+      poToken,
     }
 
     const content = await fetchSubtitles(cfg)
