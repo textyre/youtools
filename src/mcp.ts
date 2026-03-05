@@ -15,6 +15,7 @@ import {
 } from './modules/subtitles/service'
 import { loadConfig } from './config'
 import { SubtitlesCfg, SubtitleFormat } from './modules/subtitles/types'
+import { searchVideos } from './modules/search/service'
 
 // ---------------------------------------------------------------------------
 // Summary prompt templates
@@ -246,6 +247,27 @@ server.registerTool(
           text: `${prompt}\n\n---\n\n## Video Subtitles (${resolvedLang})\n\n${plainText}`,
         },
       ],
+    }
+  },
+)
+
+// Tool 6: search_videos
+server.registerTool(
+  'search_videos',
+  {
+    description:
+      'Search YouTube videos by query. Optionally scope to a specific channel. ' +
+      'Returns video list with view/like/comment counts.',
+    inputSchema: {
+      query: z.string().describe('Search query'),
+      channelId: z.string().optional().describe('YouTube channel ID to scope the search (UCxxx format)'),
+      limit: z.number().optional().describe('Max results to return (default 25, max 50)'),
+    },
+  },
+  async ({ query, channelId, limit }) => {
+    const videos = await searchVideos(query, channelId, limit ?? 25)
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(videos, null, 2) }],
     }
   },
 )
