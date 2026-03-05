@@ -125,7 +125,7 @@ export async function runSearch(cfg: SearchCfg): Promise<void> {
 export async function searchVideos(
   query: string,
   channel?: string,
-  limit = 25,
+  limit = 0,
 ): Promise<VideoRecord[]> {
   const youtube = await buildYouTubeClient()
 
@@ -137,8 +137,7 @@ export async function searchVideos(
   }
   if (channel) searchParams.channelId = await resolveChannelId(youtube, channel)
 
-  const searchRes = await youtube.search.list(searchParams)
-  const searchItems = searchRes.data.items ?? []
+  const searchItems = await fetchSearchItems(youtube, searchParams, 0)
   if (searchItems.length === 0) return []
 
   const videoIds = searchItems.map((i) => i.id?.videoId).filter((id): id is string => !!id)

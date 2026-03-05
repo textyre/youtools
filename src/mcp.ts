@@ -261,11 +261,11 @@ server.registerTool(
     inputSchema: {
       query: z.string().describe('Search query'),
       channel: z.string().optional().describe('Channel to scope the search: UCxxx ID, @handle, or YouTube URL'),
-      limit: z.number().optional().describe('Max results to return (default 25, max 50)'),
+      limit: z.number().optional().describe('Max results to return (default 0 = all available)'),
     },
   },
   async ({ query, channel, limit }) => {
-    const videos = await searchVideos(query, channel, limit ?? 25)
+    const videos = await searchVideos(query, channel, limit ?? 0)
     return {
       content: [{ type: 'text' as const, text: JSON.stringify(videos, null, 2) }],
     }
