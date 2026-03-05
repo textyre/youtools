@@ -260,12 +260,12 @@ server.registerTool(
       'Returns video list with view/like/comment counts.',
     inputSchema: {
       query: z.string().describe('Search query'),
-      channelId: z.string().optional().describe('YouTube channel ID to scope the search (UCxxx format)'),
+      channel: z.string().optional().describe('Channel to scope the search: UCxxx ID, @handle, or YouTube URL'),
       limit: z.number().optional().describe('Max results to return (default 25, max 50)'),
     },
   },
-  async ({ query, channelId, limit }) => {
-    const videos = await searchVideos(query, channelId, limit ?? 25)
+  async ({ query, channel, limit }) => {
+    const videos = await searchVideos(query, channel, limit ?? 25)
     return {
       content: [{ type: 'text' as const, text: JSON.stringify(videos, null, 2) }],
     }
