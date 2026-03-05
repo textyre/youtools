@@ -9,3 +9,4 @@ env
 *.local
 youtools-credentials.json
 /.DS_Store
+.worktrees/
