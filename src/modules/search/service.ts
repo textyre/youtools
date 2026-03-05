@@ -70,6 +70,24 @@ async function fetchStatsBatch(
   return items
 }
 
+async function fetchSearchItems(
+  youtube: youtube_v3.Youtube,
+  params: youtube_v3.Params$Resource$Search$List,
+  maxScan: number,
+): Promise<youtube_v3.Schema$SearchResult[]> {
+  const items: youtube_v3.Schema$SearchResult[] = []
+  let nextPageToken: string | undefined
+
+  do {
+    const res = await youtube.search.list({ ...params, pageToken: nextPageToken })
+    items.push(...(res.data.items ?? []))
+    nextPageToken = res.data.nextPageToken ?? undefined
+    if (maxScan > 0 && items.length >= maxScan) break
+  } while (nextPageToken)
+
+  return maxScan > 0 ? items.slice(0, maxScan) : items
+}
+
 export async function runSearch(cfg: SearchCfg): Promise<void> {
   const youtube = await buildYouTubeClient()
 
@@ -84,8 +102,7 @@ export async function runSearch(cfg: SearchCfg): Promise<void> {
     searchParams.channelId = await resolveChannelId(youtube, cfg.channel)
   }
 
-  const searchRes = await youtube.search.list(searchParams)
-  const searchItems = searchRes.data.items ?? []
+  const searchItems = await fetchSearchItems(youtube, searchParams, cfg.maxScan)
 
   if (searchItems.length === 0) {
     // eslint-disable-next-line no-console
@@ -96,7 +113,8 @@ export async function runSearch(cfg: SearchCfg): Promise<void> {
   const videoIds = searchItems.map((i) => i.id?.videoId).filter((id): id is string => !!id)
   const statsItems = await fetchStatsBatch(youtube, videoIds)
   const videos = buildSearchResults(searchItems, statsItems)
-  const sorted = compositeSort(videos, cfg.sort, cfg.order).slice(0, cfg.limit)
+  const allSorted = compositeSort(videos, cfg.sort, cfg.order)
+  const sorted = cfg.limit > 0 ? allSorted.slice(0, cfg.limit) : allSorted
   await renderTable(sorted, cfg)
 }
 

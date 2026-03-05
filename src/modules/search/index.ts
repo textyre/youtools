@@ -17,6 +17,7 @@ function parseSortKeys(value: string): SortKey[] {
 interface SearchOpts {
   channel?: string
   limit: string
+  maxScan: string
   sort: string
   order: string
   ascii: boolean
@@ -27,7 +28,8 @@ export const searchCommand = new Command('search')
   .description('Search YouTube videos by query')
   .argument('<query>', 'Search query')
   .option('--channel <ch>', 'Limit to a channel (ID, @handle, or URL)')
-  .option('-n, --limit <n>', 'number of results to return', '25')
+  .option('-n, --limit <n>', 'number of results to show (0 = all)', '0')
+  .option('--max-scan <n>', 'max results to fetch from YouTube (0 = all)', '0')
   .option('--sort <modes>', 'comma-separated sort keys: views,likes,comments', 'views')
   .option('--order <order>', 'asc | desc', 'desc')
   .option('--ascii', 'force ASCII table', false)
@@ -37,6 +39,7 @@ export const searchCommand = new Command('search')
       query,
       channel: opts.channel,
       limit: Number(opts.limit),
+      maxScan: Number(opts.maxScan),
       sort: parseSortKeys(opts.sort),
       order: (() => {
         if (opts.order !== 'asc' && opts.order !== 'desc') {

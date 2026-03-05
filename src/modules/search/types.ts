@@ -6,6 +6,7 @@ export interface SearchCfg {
   query: string
   channel?: string
   limit: number
+  maxScan: number
   sort: SortKey[]
   order: SortOrder
   ascii: boolean
