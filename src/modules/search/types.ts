@@ -9,6 +9,7 @@ export interface SearchCfg {
   maxScan: number
   sort: SortKey[]
   order: SortOrder
+  table: boolean
   ascii: boolean
   wide: boolean
 }

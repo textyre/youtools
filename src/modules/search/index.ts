@@ -20,6 +20,7 @@ interface SearchOpts {
   maxScan: string
   sort: string
   order: string
+  table: boolean
   ascii: boolean
   wide: boolean
 }
@@ -32,8 +33,9 @@ export const searchCommand = new Command('search')
   .option('--max-scan <n>', 'max results to fetch from YouTube (0 = all)', '0')
   .option('--sort <modes>', 'comma-separated sort keys: views,likes,comments', 'views')
   .option('--order <order>', 'asc | desc', 'desc')
-  .option('--ascii', 'force ASCII table', false)
-  .option('--wide', 'show description column', false)
+  .option('--table', 'output as table instead of markdown', false)
+  .option('--ascii', 'force ASCII table (implies --table)', false)
+  .option('--wide', 'show description column (implies --table)', false)
   .action(async (query: string, opts: SearchOpts) => {
     const cfg = {
       query,
@@ -47,6 +49,7 @@ export const searchCommand = new Command('search')
         }
         return opts.order as SortOrder
       })(),
+      table: Boolean(opts.table) || Boolean(opts.ascii) || Boolean(opts.wide),
       ascii: Boolean(opts.ascii),
       wide: Boolean(opts.wide),
     }

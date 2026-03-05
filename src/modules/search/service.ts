@@ -3,7 +3,7 @@ import { ensureAuthClient } from '../../lib/googleAuth'
 import { VideoRecord, SearchCfg } from './types'
 import { parseChannelInput } from '../popular-videos/channel'
 import { compositeSort } from '../popular-videos/sort'
-import { renderTable } from '../popular-videos/ui'
+import { renderMarkdown, renderTable } from './ui'
 
 async function buildYouTubeClient(): Promise<youtube_v3.Youtube> {
   const apiKey = process.env.YT_API_KEY
@@ -115,7 +115,11 @@ export async function runSearch(cfg: SearchCfg): Promise<void> {
   const videos = buildSearchResults(searchItems, statsItems)
   const allSorted = compositeSort(videos, cfg.sort, cfg.order)
   const sorted = cfg.limit > 0 ? allSorted.slice(0, cfg.limit) : allSorted
-  await renderTable(sorted, cfg)
+  if (cfg.table) {
+    await renderTable(sorted, cfg)
+  } else {
+    renderMarkdown(sorted)
+  }
 }
 
 export async function searchVideos(
