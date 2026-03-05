@@ -77,7 +77,7 @@ export async function runSearch(cfg: SearchCfg): Promise<void> {
     part: ['snippet'],
     q: cfg.query,
     type: ['video'],
-    maxResults: Math.min(cfg.limit, 50),
+    maxResults: 50,
   }
 
   if (cfg.channel) {
@@ -111,7 +111,7 @@ export async function searchVideos(
     part: ['snippet'],
     q: query,
     type: ['video'],
-    maxResults: Math.min(limit, 50),
+    maxResults: 50,
   }
   if (channelId) searchParams.channelId = channelId
 
