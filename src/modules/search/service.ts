@@ -143,5 +143,6 @@ export async function searchVideos(
 
   const videoIds = searchItems.map((i) => i.id?.videoId).filter((id): id is string => !!id)
   const statsItems = await fetchStatsBatch(youtube, videoIds)
-  return buildSearchResults(searchItems, statsItems).slice(0, limit)
+  const sorted = compositeSort(buildSearchResults(searchItems, statsItems), ['views'], 'desc')
+  return limit > 0 ? sorted.slice(0, limit) : sorted
 }
