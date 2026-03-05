@@ -1,3 +1,7 @@
+jest.mock('../../lib/googleAuth', () => ({
+  ensureAuthClient: jest.fn(),
+}))
+
 import { buildSearchResults } from './service'
 import { VideoRecord } from './types'
 
