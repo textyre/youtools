@@ -1,6 +1,6 @@
 import { google, youtube_v3 } from 'googleapis'
 import { ensureAuthClient } from '../../lib/googleAuth'
-import { VideoRecord, SearchCfg } from './types'
+import { VideoRecord, SearchCfg, SortKey, SortOrder } from './types'
 import { parseChannelInput } from '../popular-videos/channel'
 import { compositeSort } from '../popular-videos/sort'
 import { renderMarkdown, renderTable } from './ui'
@@ -126,6 +126,8 @@ export async function searchVideos(
   query: string,
   channel?: string,
   limit = 0,
+  sort: SortKey[] = ['views'],
+  order: SortOrder = 'desc',
 ): Promise<VideoRecord[]> {
   const youtube = await buildYouTubeClient()
 
@@ -142,6 +144,6 @@ export async function searchVideos(
 
   const videoIds = searchItems.map((i) => i.id?.videoId).filter((id): id is string => !!id)
   const statsItems = await fetchStatsBatch(youtube, videoIds)
-  const sorted = compositeSort(buildSearchResults(searchItems, statsItems), ['views'], 'desc')
+  const sorted = compositeSort(buildSearchResults(searchItems, statsItems), sort, order)
   return limit > 0 ? sorted.slice(0, limit) : sorted
 }

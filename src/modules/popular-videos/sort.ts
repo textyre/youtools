@@ -3,6 +3,7 @@ import { VideoRecord, SortKey, SortOrder } from './types'
 function getValue(v: VideoRecord, key: SortKey): number {
   if (key === 'views') return v.viewCount
   if (key === 'likes') return v.likeCount
+  if (key === 'date') return new Date(v.publishedAt).getTime()
   return v.commentCount
 }
 

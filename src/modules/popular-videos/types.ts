@@ -8,5 +8,5 @@ export interface VideoRecord {
   commentCount: number
 }
 
-export type SortKey = 'views' | 'likes' | 'comments'
+export type SortKey = 'views' | 'likes' | 'comments' | 'date'
 export type SortOrder = 'asc' | 'desc'

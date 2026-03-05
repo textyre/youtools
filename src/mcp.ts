@@ -262,10 +262,14 @@ server.registerTool(
       query: z.string().describe('Search query'),
       channel: z.string().optional().describe('Channel to scope the search: UCxxx ID, @handle, or YouTube URL'),
       limit: z.number().optional().describe('Max results to return (default 0 = all available)'),
+      sort: z.string().optional().describe('Sort key: views, likes, comments, date (default: views)'),
+      order: z.string().optional().describe('Sort order: asc or desc (default: desc)'),
     },
   },
-  async ({ query, channel, limit }) => {
-    const videos = await searchVideos(query, channel, limit ?? 0)
+  async ({ query, channel, limit, sort, order }) => {
+    const sortKeys = (sort ?? 'views').split(',').map((s) => s.trim()) as ('views' | 'likes' | 'comments' | 'date')[]
+    const sortOrder = (order === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc'
+    const videos = await searchVideos(query, channel, limit ?? 0, sortKeys, sortOrder)
     return {
       content: [{ type: 'text' as const, text: JSON.stringify(videos, null, 2) }],
     }
